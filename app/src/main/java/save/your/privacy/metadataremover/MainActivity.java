@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,6 +23,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private static final int PICK_FROM_CAMERA = 1;
     private static final int PICK_FROM_FILE = 2;
 
+    private String appFolder ="";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,13 +34,14 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         btn_gallery.setOnClickListener(this);
         Button btn_camera = (Button) findViewById(R.id.btn_camera);
         btn_camera.setOnClickListener(this);
+        createDirIfNotExists("MetadataRemover");
     }
 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        //getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -64,11 +68,14 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         if (requestCode == PICK_FROM_FILE) {
             mImageCaptureUri = data.getData();
-            path = getRealPathFromURI(mImageCaptureUri); //from Gallery
-            new RemoveMetadata().execute(path);
+            //path = getRealPathFromURI(mImageCaptureUri); //from Gallery
+            File file = new File(appFolder, mImageCaptureUri.getLastPathSegment().toString());
+            new RemoveMetadata().execute(file.getAbsolutePath());
         } else {
             path    = mImageCaptureUri.getPath();
-            new RemoveMetadata().execute(path);
+            //path = getRealPathFromURI(mImageCaptureUri); //from Camera
+            File file = new File(appFolder, mImageCaptureUri.getLastPathSegment().toString());
+            new RemoveMetadata().execute(file.getAbsolutePath());
         }
     }
     public String getRealPathFromURI(Uri contentUri) {
@@ -113,5 +120,22 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 }
                 break;
         }
+    }
+
+    public boolean createDirIfNotExists(String path) {
+        boolean ret = true;
+
+        File folder = new File(Environment.getExternalStorageDirectory(), path);
+        if (!folder.exists()) {
+            if (!folder.mkdirs()) {
+                Log.e("DataRemover", "Problem creating Image folder");
+                ret = false;
+            }
+            else
+            {
+                appFolder = folder.toString();
+            }
+        }
+        return ret;
     }
 }

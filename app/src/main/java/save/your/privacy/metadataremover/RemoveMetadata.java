@@ -10,7 +10,7 @@ import java.io.IOException;
  * Created by ifrey on 4/03/15.
  */
 public class RemoveMetadata extends AsyncTask<String,Void,Boolean> {
-    private final String TAG = "EXIFCleaner";
+    private final String TAG = "RemoveMetadata";
 
     @Override
     protected Boolean doInBackground(String... filePath){

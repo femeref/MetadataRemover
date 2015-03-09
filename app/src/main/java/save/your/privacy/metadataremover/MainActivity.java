@@ -2,6 +2,7 @@ package save.your.privacy.metadataremover;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Path;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -12,8 +13,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Random;
 
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
@@ -24,6 +32,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private static final int PICK_FROM_FILE = 2;
 
     private String appFolder ="";
+
+    private final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,14 +78,66 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         if (requestCode == PICK_FROM_FILE) {
             mImageCaptureUri = data.getData();
+            path    = mImageCaptureUri.getPath();
             //path = getRealPathFromURI(mImageCaptureUri); //from Gallery
-            File file = new File(appFolder, mImageCaptureUri.getLastPathSegment().toString());
-            new RemoveMetadata().execute(file.getAbsolutePath());
+            File fileDst = new File(getApplicationContext().getFilesDir(),getName());
+            if (fileDst.exists()) {
+                fileDst.delete();
+            }
+            else
+            {
+                try {
+                    fileDst.createNewFile();
+                } catch (IOException e) {
+                    Log.e(TAG, "Problem creating file");
+                }
+            }
+            Log.e(TAG, "FileDst: "+fileDst.getAbsolutePath());
+            Log.e(TAG, "FileDst path: "+fileDst.getPath());
+            Log.e(TAG, "FileDst name: "+fileDst.getName());
+            Log.e(TAG, "FileDst parent: "+fileDst.getParent());
+            try {
+                Log.e(TAG, "FileDst canonical path: "+fileDst.getCanonicalPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            File fileSrc = new File(path);
+            Log.e(TAG, "FileSrc: "+fileSrc.getAbsolutePath());
+            try {
+                copyFile(fileSrc,fileDst);
+            } catch (IOException e) {
+                Log.e(TAG, "Problem copying file");
+            }
+            new RemoveMetadata().execute(fileDst.getAbsolutePath());
+            Toast.makeText(getApplicationContext(),"Removed metadata from the image",Toast.LENGTH_LONG).show();
+
         } else {
+            mImageCaptureUri = data.getData();
             path    = mImageCaptureUri.getPath();
             //path = getRealPathFromURI(mImageCaptureUri); //from Camera
-            File file = new File(appFolder, mImageCaptureUri.getLastPathSegment().toString());
-            new RemoveMetadata().execute(file.getAbsolutePath());
+            File fileDst = new File(getApplicationContext().getFilesDir(),getName());
+            if (fileDst.exists()) {
+                fileDst.delete();
+            }
+            else
+            {
+                try {
+                    fileDst.createNewFile();
+                } catch (IOException e) {
+                    Log.e(TAG, "Problem creating file");
+                }
+            }
+            Log.e(TAG, "FileDst path: "+fileDst.getPath());
+            File fileSrc = new File(path);
+            Log.e(TAG, "FileSrc: "+fileSrc.getAbsolutePath());
+            try {
+                copyFile(fileSrc,fileDst);
+            } catch (IOException e) {
+                Log.e(TAG, "Problem copying file");
+            }
+            Log.e(TAG, "Remove metadata of "+ fileDst.getAbsolutePath());
+            new RemoveMetadata().execute(fileDst.getAbsolutePath());
+            Toast.makeText(getApplicationContext(),"Removed metadata from the photo",Toast.LENGTH_LONG).show();
         }
     }
     public String getRealPathFromURI(Uri contentUri) {
@@ -128,14 +190,40 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         File folder = new File(Environment.getExternalStorageDirectory(), path);
         if (!folder.exists()) {
             if (!folder.mkdirs()) {
-                Log.e("DataRemover", "Problem creating Image folder");
+                Log.e(TAG, "Problem creating Image folder");
                 ret = false;
             }
             else
             {
+                Log.e(TAG, "Folder created");
                 appFolder = folder.toString();
+                Log.e(TAG, "Folder: " + folder.toString());
             }
         }
         return ret;
+    }
+
+    public void copyFile(File src, File dst) throws IOException {
+        InputStream in = new FileInputStream(dst);
+        OutputStream out = new FileOutputStream(src);
+        Log.e(TAG, "copy file 1");
+        // Transfer bytes from in to out
+        byte[] buf = new byte[1024];
+        int len;
+        Log.e(TAG, "copy file 2");
+        while ((len = in.read(buf)) > 0) {
+            out.write(buf, 0, len);
+        }
+        Log.e(TAG, "copy file 3");
+        in.close();
+        out.close();
+        Log.e(TAG, "copy file 4");
+    }
+
+    private String getName(){
+        Random generator = new Random();
+        int n= 10000;
+        n= generator.nextInt(n);
+        return "Image-"+n+".jpg";
     }
 }

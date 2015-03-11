@@ -1,8 +1,6 @@
 package save.your.privacy.metadataremover;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.Path;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
@@ -18,13 +16,10 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.util.Random;
 
 
@@ -57,11 +52,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         Button btn_camera = (Button) findViewById(R.id.btn_camera);
         btn_camera.setOnClickListener(this);
 
-        File folder = new File("/sdcard/"+appFolder+"/");
-        allFiles = folder.list();
-        SCAN_PATH=Environment.getExternalStorageDirectory().toString()+"/"+appFolder+"/"+allFiles[0];
-
-        Log.d("SCAN PATH", "Scan Path " + SCAN_PATH);
         Button scanBtn = (Button)findViewById(R.id.btn_folder);
         scanBtn.setOnClickListener(this);
     }
@@ -201,7 +191,17 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 }
                 break;
             case R.id.btn_folder:
-                startScan();
+                File folder = new File("/sdcard/"+appFolder+"/");
+                allFiles = folder.list();
+                if (allFiles.length > 0)
+                {
+                    SCAN_PATH = Environment.getExternalStorageDirectory().toString() + "/" + appFolder + "/" + allFiles[0];
+                    startScan();
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(),"There is no files in the folder",Toast.LENGTH_LONG).show();
+                }
                 break;
         }
     }
@@ -247,7 +247,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setDataAndType(uri, "image/*");
-                //intent.setData(uri);
                 startActivity(intent);
             }
         } finally

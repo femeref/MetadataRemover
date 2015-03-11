@@ -59,31 +59,23 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         File folder = new File("/sdcard/"+appFolder+"/");
         allFiles = folder.list();
-        //   uriAllFiles= new Uri[allFiles.length];
-        for(int i=0;i<allFiles.length;i++)
-        {
-            Log.d("all file path"+i, allFiles[i]+allFiles.length);
-        }
-        //  Uri uri= Uri.fromFile(new File(Environment.getExternalStorageDirectory().toString()+"/yourfoldername/"+allFiles[0]));
-
-
         SCAN_PATH=Environment.getExternalStorageDirectory().toString()+"/"+appFolder+"/"+allFiles[0];
 
         Log.d("SCAN PATH", "Scan Path " + SCAN_PATH);
         Button scanBtn = (Button)findViewById(R.id.btn_folder);
         scanBtn.setOnClickListener(this);
-        }
+    }
 
-        private void startScan()
+    private void startScan()
+    {
+        Log.d("Connected", "success" + conn);
+        if(conn!=null)
         {
-            Log.d("Connected", "success" + conn);
-            if(conn!=null)
-            {
-                conn.disconnect();
-            }
-            conn = new MediaScannerConnection(getApplicationContext(),this);
-            conn.connect();
+            conn.disconnect();
         }
+        conn = new MediaScannerConnection(getApplicationContext(),this);
+        conn.connect();
+    }
 
 
     @Override

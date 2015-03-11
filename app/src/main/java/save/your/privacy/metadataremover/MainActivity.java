@@ -68,15 +68,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
 
         SCAN_PATH=Environment.getExternalStorageDirectory().toString()+"/"+appFolder+"/"+allFiles[0];
-        System.out.println(" SCAN_PATH  " +SCAN_PATH);
 
         Log.d("SCAN PATH", "Scan Path " + SCAN_PATH);
         Button scanBtn = (Button)findViewById(R.id.btn_folder);
-        scanBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                startScan();
-            }});
+        scanBtn.setOnClickListener(this);
         }
 
         private void startScan()
@@ -86,7 +81,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             {
                 conn.disconnect();
             }
-            conn = new MediaScannerConnection(this,this);
+            conn = new MediaScannerConnection(getApplicationContext(),this);
             conn.connect();
         }
 
@@ -120,11 +115,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         String path     = "";
 
         if (requestCode == PICK_FROM_FILE) {
-            mImageCaptureUri = data.getData();
             try {
                 InputStream stream = getContentResolver().openInputStream(data.getData());
-                path    = mImageCaptureUri.getPath();
-                //path = getRealPathFromURI(mImageCaptureUri); //from Gallery
                 File fileDst = new File(Environment.getExternalStorageDirectory()+"/"+appFolder,getName());
                 if (fileDst.exists()) {
                     fileDst.delete();
@@ -137,20 +129,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                         Log.e(TAG, "Problem creating file");
                     }
                 }
-                Log.e(TAG, "FileDst: "+fileDst.getAbsolutePath());
-                Log.e(TAG, "FileDst path: "+fileDst.getPath());
-                Log.e(TAG, "FileDst name: "+fileDst.getName());
-                Log.e(TAG, "FileDst parent: "+fileDst.getParent());
-                    Log.e(TAG, "FileDst canonical path: "+fileDst.getCanonicalPath());
-
-                /*File fileSrc = new File(mImageCaptureUri.toString());
-                Log.e(TAG, "FileSrc: "+fileSrc.getAbsolutePath());
-                try {
-                    copyFile(fileSrc,fileDst);
-                } catch (IOException e) {
-                    Log.e(TAG, "Problem copying file");
-                    e.printStackTrace();
-                }*/
                 FileOutputStream out = new FileOutputStream(fileDst);
                 int read = 0;
                 byte[] bytes = new byte[1024];
@@ -168,47 +146,40 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             Toast.makeText(getApplicationContext(),"Removed metadata from the image",Toast.LENGTH_LONG).show();
 
         } else {
-            mImageCaptureUri =  data.getData();
-            path    = mImageCaptureUri.getPath();
-            //path = getRealPathFromURI(mImageCaptureUri); //from Camera
-            File fileDst = new File(getApplicationContext().getFilesDir(),getName());
-            if (fileDst.exists()) {
-                fileDst.delete();
-            }
-            else
-            {
-                try {
-                    fileDst.createNewFile();
-                } catch (IOException e) {
-                    Log.e(TAG, "Problem creating file");
-                }
-            }
-            Log.e(TAG, "FileDst path: "+fileDst.getPath());
-            File fileSrc = new File(mImageCaptureUri.toString());
-            Log.e(TAG, "FileSrc: "+fileSrc.getAbsolutePath());
             try {
-                copyFile(fileSrc,fileDst);
+                InputStream stream = getContentResolver().openInputStream(data.getData());
+                File fileDst = new File(Environment.getExternalStorageDirectory()+"/"+appFolder,getName());
+                if (fileDst.exists()) {
+                    fileDst.delete();
+                }
+                else
+                {
+                    try {
+                        fileDst.createNewFile();
+                    } catch (IOException e) {
+                        Log.e(TAG, "Problem creating file");
+                    }
+                }
+                FileOutputStream out = new FileOutputStream(fileDst);
+                int read = 0;
+                byte[] bytes = new byte[1024];
+                while((read=stream.read(bytes)) != -1){
+                    out.write(bytes,0,read);
+                }
+                out.close();
+                stream.close();
+                new RemoveMetadata().execute(fileDst.getAbsolutePath());
+            } catch (FileNotFoundException e) {
+                Toast.makeText(getApplicationContext(),"Could not remove metadata from the photo",Toast.LENGTH_LONG).show();
+                Log.e(TAG, "FileNotFoundException");
             } catch (IOException e) {
-                Log.e(TAG, "Problem copying file");
+                Toast.makeText(getApplicationContext(),"Could not remove metadata from the photo",Toast.LENGTH_LONG).show();
+                Log.e(TAG, "IOException");
             }
-            Log.e(TAG, "Remove metadata of "+ fileDst.getAbsolutePath());
-            new RemoveMetadata().execute(fileDst.getAbsolutePath());
+
             Toast.makeText(getApplicationContext(),"Removed metadata from the photo",Toast.LENGTH_LONG).show();
         }
     }
-    public String getRealPathFromURI(Uri contentUri) {
-        String [] proj      = {MediaStore.Images.Media.DATA};
-        Cursor cursor       = managedQuery( contentUri, proj, null, null,null);
-
-        if (cursor == null) return null;
-
-        int column_index    = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-
-        cursor.moveToFirst();
-
-        return cursor.getString(column_index);
-    }
-
 
     public void onClick(View v){
 
@@ -237,6 +208,9 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                     e.printStackTrace();
                 }
                 break;
+            case R.id.btn_folder:
+                startScan();
+                break;
         }
     }
 
@@ -259,33 +233,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         return ret;
     }
 
-    /*public void copyFile(File src, File dst) throws IOException {
-        InputStream in = new FileInputStream(dst);
-        OutputStream out = new FileOutputStream(src);
-        Log.e(TAG, "copy file 1");
-        // Transfer bytes from in to out
-        byte[] buf = new byte[1024];
-        int len;
-        Log.e(TAG, "copy file 2");
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
-        }
-        Log.e(TAG, "copy file 3");
-        in.close();
-        out.close();
-        Log.e(TAG, "copy file 4");
-    }*/
-
-    public void copyFile(File src, File dst) throws IOException {
-        FileInputStream inStream = new FileInputStream(src);
-        FileOutputStream outStream = new FileOutputStream(dst);
-        FileChannel inChannel = inStream.getChannel();
-        FileChannel outChannel = outStream.getChannel();
-        inChannel.transferTo(0, inChannel.size(), outChannel);
-        inStream.close();
-        outStream.close();
-    }
-
     private String getName(){
         Random generator = new Random();
         int n= 10000;
@@ -293,13 +240,11 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         return "Image-"+n+".jpg";
     }
 
-
     @Override
     public void onMediaScannerConnected() {
         Log.d("onMediaScannerConnected","success"+conn);
         conn.scanFile(SCAN_PATH, FILE_TYPE);
     }
-
 
     @Override
     public void onScanCompleted(String path, Uri uri) {
@@ -309,7 +254,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             if (uri != null)
             {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(uri);
+                intent.setDataAndType(uri, "image/*");
+                //intent.setData(uri);
                 startActivity(intent);
             }
         } finally

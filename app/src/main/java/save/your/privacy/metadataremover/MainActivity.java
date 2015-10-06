@@ -1,5 +1,6 @@
 package save.your.privacy.metadataremover;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
@@ -20,6 +21,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
 
 
@@ -127,9 +130,9 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             }
             Toast.makeText(getApplicationContext(),"Removed metadata from the image",Toast.LENGTH_LONG).show();
 
-        } else {
+        } else if (requestCode == PICK_FROM_CAMERA){
             try {
-                InputStream stream = getContentResolver().openInputStream(data.getData());
+                InputStream stream = getContentResolver().openInputStream(mImageCaptureUri);
                 File fileDst = new File(Environment.getExternalStorageDirectory()+"/"+appFolder,getName());
                 if (fileDst.exists()) {
                     fileDst.delete();
@@ -157,6 +160,12 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             } catch (IOException e) {
                 Toast.makeText(getApplicationContext(),"Could not remove metadata from the photo",Toast.LENGTH_LONG).show();
                 Log.e(TAG, "IOException");
+            } finally {
+                File file =new File(mImageCaptureUri.getPath());
+                boolean deleted = file.delete();
+                if (deleted == false){
+                    Toast.makeText(getApplicationContext(),"Could not delete temporary photo file",Toast.LENGTH_LONG).show();
+                }
             }
 
             Toast.makeText(getApplicationContext(),"Removed metadata from the photo",Toast.LENGTH_LONG).show();
@@ -191,17 +200,12 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 }
                 break;
             case R.id.btn_folder:
-                File folder = new File("/sdcard/"+appFolder+"/");
-                allFiles = folder.list();
-                if (allFiles.length > 0)
-                {
-                    SCAN_PATH = Environment.getExternalStorageDirectory().toString() + "/" + appFolder + "/" + allFiles[0];
-                    startScan();
-                }
-                else
-                {
-                    Toast.makeText(getApplicationContext(),"There is no files in the folder",Toast.LENGTH_LONG).show();
-                }
+                Intent folderIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+                File folder = new File(Environment.getExternalStorageDirectory()+"/"+appFolder+"/");
+                folderIntent.setData(Uri.fromFile(folder));
+                //startActivityForResult(folderIntent, 1);
+                startActivity(folderIntent);
+
                 break;
         }
     }

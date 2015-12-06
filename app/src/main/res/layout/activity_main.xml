@@ -42,4 +42,12 @@
         android:layout_alignStart="@+id/btn_camera"
         android:layout_alignRight="@+id/btn_gallery"
         android:layout_alignEnd="@+id/btn_gallery" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/reminder_text"
+        android:id="@+id/textView"
+        android:layout_below="@+id/btn_folder"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

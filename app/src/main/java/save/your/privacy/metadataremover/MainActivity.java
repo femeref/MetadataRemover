@@ -200,11 +200,22 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 }
                 break;
             case R.id.btn_folder:
-                Intent folderIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+                /*Intent folderIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
                 File folder = new File(Environment.getExternalStorageDirectory()+"/"+appFolder+"/");
                 folderIntent.setData(Uri.fromFile(folder));
-                //startActivityForResult(folderIntent, 1);
-                startActivity(folderIntent);
+                //startActivityForResult(folderIntent, 1);*/
+                /*Intent galleryIntent = new Intent();
+                galleryIntent.setAction(android.content.Intent.ACTION_VIEW);
+                //galleryIntent.setType(FILE_TYPE);
+                File folder = new File(Environment.getExternalStorageDirectory()+"/"+appFolder+"/");
+                galleryIntent.setDataAndType(Uri.fromFile(folder),FILE_TYPE);
+                galleryIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(galleryIntent);*/
+                String fileDst = Environment.getExternalStorageDirectory()+"/"+appFolder;
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(
+                        "content:/"+fileDst));//media/internal/images/media"));
+                intent.setType(FILE_TYPE);
+                startActivity(intent);
 
                 break;
         }

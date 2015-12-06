@@ -7,5 +7,6 @@
     <string name="top_text">Clean images metadata</string>
     <string name="btn_gallery">Image from Gallery</string>
     <string name="btn_camera">Image from Camera</string>
-    <string name="btn_folder">Edited images folder</string>
+    <string name="btn_folder">Open Gallery</string>
+    <string name="reminder_text">Edited images are saved in MetadataRemover Album</string>
 </resources>
